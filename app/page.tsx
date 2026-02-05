@@ -365,7 +365,7 @@ export default function Home() {
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 flex justify-between items-center">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-pink-600">
-              Zoe's Anime Math Quiz 🎌
+              Zoe&apos;s Anime Math Quiz 🎌
             </h1>
             <p className="text-gray-600 mt-1">
               Question {currentQuestionIndex + 1} of {questions.length}
@@ -408,7 +408,7 @@ export default function Home() {
                   <div>
                     <div className="mb-2">😊</div>
                     <div className="text-2xl">Not quite! The answer is {currentQuestion.answer}</div>
-                    <div className="text-xl text-gray-600 mt-2">Keep trying, you're doing great!</div>
+                    <div className="text-xl text-gray-600 mt-2">Keep trying, you&apos;re doing great!</div>
                   </div>
                 )}
               </div>

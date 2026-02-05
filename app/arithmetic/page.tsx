@@ -330,7 +330,7 @@ export default function ArithmeticPage() {
                   <div>
                     <div className="mb-2">😊</div>
                     <div className="text-2xl">Not quite! The answer is {currentQuestion.answer}</div>
-                    <div className="text-xl text-gray-600 mt-2">Keep trying, you're doing great!</div>
+                    <div className="text-xl text-gray-600 mt-2">Keep trying, you&apos;re doing great!</div>
                   </div>
                 )}
               </div>
