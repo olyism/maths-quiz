@@ -145,7 +145,7 @@ export default function ArithmeticPage() {
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#FF6B9D', '#C44569', '#FFA07A', '#FFD700', '#FF69B4', '#9370DB'],
+        colors: ['#3B82F6', '#8B5CF6', '#6366F1', '#A78BFA', '#60A5FA', '#7C3AED'],
       })
       // Additional burst
       setTimeout(() => {
@@ -154,14 +154,14 @@ export default function ArithmeticPage() {
           angle: 60,
           spread: 55,
           origin: { x: 0 },
-          colors: ['#FF6B9D', '#C44569', '#FFA07A', '#FFD700', '#FF69B4', '#9370DB'],
+          colors: ['#3B82F6', '#8B5CF6', '#6366F1', '#A78BFA', '#60A5FA', '#7C3AED'],
         })
         confetti({
           particleCount: 50,
           angle: 120,
           spread: 55,
           origin: { x: 1 },
-          colors: ['#FF6B9D', '#C44569', '#FFA07A', '#FFD700', '#FF69B4', '#9370DB'],
+          colors: ['#3B82F6', '#8B5CF6', '#6366F1', '#A78BFA', '#60A5FA', '#7C3AED'],
         })
       }, 250)
     } else {
@@ -214,10 +214,10 @@ export default function ArithmeticPage() {
 
   if (quizComplete) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 via-purple-50 to-blue-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-indigo-100 p-4">
         <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 max-w-2xl w-full text-center">
           <div className="text-6xl mb-4">🎉</div>
-          <h1 className="text-4xl md:text-5xl font-bold text-pink-600 mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-blue-600 mb-4">
             Amazing Work, Zoe! 🐷
           </h1>
           <div className="text-3xl mb-6">
@@ -226,7 +226,7 @@ export default function ArithmeticPage() {
           <div className="text-2xl mb-6 text-gray-700">
             Time: {formatTime(timeElapsed)}
           </div>
-          <div className="bg-yellow-100 rounded-2xl p-6 mb-6 border-2 border-yellow-300">
+          <div className="bg-indigo-100 rounded-2xl p-6 mb-6 border-2 border-purple-300">
             <p className="text-xl md:text-2xl text-gray-800 font-semibold">
               {selectedJoke}
             </p>
@@ -234,13 +234,13 @@ export default function ArithmeticPage() {
           <div className="flex gap-4 justify-center">
             <button
               onClick={generateQuestions}
-              className="bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xl font-bold py-4 px-8 rounded-full hover:from-pink-600 hover:to-purple-600 transform hover:scale-105 transition-all shadow-lg"
+              className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xl font-bold py-4 px-8 rounded-full hover:from-blue-600 hover:to-purple-600 transform hover:scale-105 transition-all shadow-lg"
             >
               Play Again! 🎮
             </button>
             <Link
               href="/"
-              className="bg-gray-200 text-gray-700 text-xl font-bold py-4 px-8 rounded-full hover:bg-gray-300 transform hover:scale-105 transition-all shadow-lg"
+              className="bg-purple-200 text-purple-800 text-xl font-bold py-4 px-8 rounded-full hover:bg-purple-300 transform hover:scale-105 transition-all shadow-lg"
             >
               Story Mode 📖
             </Link>
@@ -252,7 +252,7 @@ export default function ArithmeticPage() {
 
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 via-purple-50 to-blue-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-indigo-100">
         <div className="text-center">
           <div className="text-6xl mb-4">🐷</div>
           <p className="text-2xl text-gray-700">Loading...</p>
@@ -265,7 +265,7 @@ export default function ArithmeticPage() {
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-50 to-blue-100 p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-indigo-100 p-4 relative overflow-hidden">
       {/* Emoji container for wrong answers */}
       <div className="fixed inset-0 pointer-events-none z-50">
         {wrongEmojis.map((emojiData) => (
@@ -286,7 +286,7 @@ export default function ArithmeticPage() {
         {/* Header with Timer */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-pink-600">
+            <h1 className="text-3xl md:text-4xl font-bold text-blue-600">
               Arithmetic Quiz 🐷
             </h1>
             <p className="text-gray-600 mt-1">
@@ -306,7 +306,7 @@ export default function ArithmeticPage() {
         {/* Progress Bar */}
         <div className="bg-white rounded-full h-4 mb-6 overflow-hidden shadow-md">
           <div
-            className="bg-gradient-to-r from-pink-500 to-purple-500 h-full transition-all duration-300"
+            className="bg-gradient-to-r from-blue-500 to-purple-500 h-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -341,13 +341,13 @@ export default function ArithmeticPage() {
                     type="number"
                     value={userAnswer}
                     onChange={(e) => setUserAnswer(e.target.value)}
-                    className="text-4xl text-center w-32 h-20 border-4 border-pink-300 rounded-2xl focus:border-pink-500 focus:outline-none focus:ring-4 focus:ring-pink-200"
+                    className="text-4xl text-center w-32 h-20 border-4 border-blue-300 rounded-2xl focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-blue-200"
                     autoFocus
                     required
                   />
                   <button
                     type="submit"
-                    className="bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xl font-bold py-4 px-8 rounded-full hover:from-pink-600 hover:to-purple-600 transform hover:scale-105 transition-all shadow-lg mt-4"
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xl font-bold py-4 px-8 rounded-full hover:from-blue-600 hover:to-purple-600 transform hover:scale-105 transition-all shadow-lg mt-4"
                   >
                     Submit Answer ✨
                   </button>
@@ -367,7 +367,7 @@ export default function ArithmeticPage() {
           </button>
           <Link
             href="/"
-            className="bg-blue-200 text-blue-700 text-lg font-semibold py-3 px-6 rounded-full hover:bg-blue-300 transition-all"
+            className="bg-purple-200 text-purple-800 text-lg font-semibold py-3 px-6 rounded-full hover:bg-purple-300 transition-all"
           >
             📖 Story Mode
           </Link>
