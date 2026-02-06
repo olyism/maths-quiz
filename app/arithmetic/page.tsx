@@ -244,6 +244,12 @@ export default function ArithmeticPage() {
             >
               Story Mode 📖
             </Link>
+            <Link
+              href="/zombie"
+              className="bg-amber-200 text-amber-800 text-xl font-bold py-4 px-8 rounded-full hover:bg-amber-300 transform hover:scale-105 transition-all shadow-lg"
+            >
+              Zombie Survival 🧟
+            </Link>
           </div>
         </div>
       </div>
@@ -370,6 +376,12 @@ export default function ArithmeticPage() {
             className="bg-blue-200 text-blue-700 text-lg font-semibold py-3 px-6 rounded-full hover:bg-blue-300 transition-all"
           >
             📖 Story Mode
+          </Link>
+          <Link
+            href="/zombie"
+            className="bg-amber-200 text-amber-800 text-lg font-semibold py-3 px-6 rounded-full hover:bg-amber-300 transition-all"
+          >
+            🧟 Zombie Survival
           </Link>
         </div>
       </div>
