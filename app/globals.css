@@ -31,3 +31,18 @@ body {
 .animate-emoji-burst {
   animation: emoji-burst 2s ease-out forwards;
 }
+
+@keyframes flee-right {
+  from {
+    opacity: 1;
+    left: var(--flee-start, 50%);
+  }
+  to {
+    opacity: 0.2;
+    left: 120%;
+  }
+}
+
+.animate-flee-right {
+  animation: flee-right 1.2s ease-out forwards;
+}

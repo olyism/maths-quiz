@@ -4,12 +4,25 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import confetti from 'canvas-confetti'
 
-const GAME_DURATION_SEC = 3 * 60
 const HERO_ZONE_PERCENT = 10
 const ZOMBIE_START_X = 98
-const ZOMBIE_SPEED_PERCENT_PER_SEC = 6
-const SPAWN_INTERVAL_MS = 4500
 const POOP_COUNT = 40
+
+const TIME_OPTIONS = [
+  { value: 1, label: '1 min' },
+  { value: 2, label: '2 min' },
+  { value: 3, label: '3 min' },
+] as const
+
+const DIFFICULTY_CONFIG = {
+  easy: { speed: 4, spawnMs: 5500 },
+  medium: { speed: 6, spawnMs: 4500 },
+  hard: { speed: 9, spawnMs: 3000 },
+} as const
+
+type Difficulty = keyof typeof DIFFICULTY_CONFIG
+
+type FleeingPig = { id: number; x: number; y: number; createdAt: number }
 
 type Zombie = {
   id: number
@@ -60,29 +73,39 @@ function spawnZombie(id: number): Zombie {
   }
 }
 
+const FLEE_DURATION_MS = 1200
+
 export default function ZombieGamePage() {
   const [gameStatus, setGameStatus] = useState<'idle' | 'playing' | 'won' | 'lost'>('idle')
   const [zombies, setZombies] = useState<Zombie[]>([])
   const [lives, setLives] = useState(3)
-  const [timeLeft, setTimeLeft] = useState(GAME_DURATION_SEC)
+  const [timeLeft, setTimeLeft] = useState(60)
   const [answerInput, setAnswerInput] = useState('')
   const [laserFeedback, setLaserFeedback] = useState<'hit' | 'miss' | null>(null)
   const [poopEmojis, setPoopEmojis] = useState<Array<{ id: number; x: number; y: number }>>([])
+  const [fleeingPigs, setFleeingPigs] = useState<FleeingPig[]>([])
+  const [difficulty, setDifficulty] = useState<Difficulty>('easy')
+  const [gameTimeMinutes, setGameTimeMinutes] = useState(1)
   const nextIdRef = useRef(1)
   const lastTimeRef = useRef<number>(0)
   const spawnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const rafRef = useRef<number>(0)
+  const gameConfigRef = useRef({ durationSec: 60, speed: 4, spawnMs: 5500 })
 
   const startGame = useCallback(() => {
+    const durationSec = gameTimeMinutes * 60
+    const config = DIFFICULTY_CONFIG[difficulty]
+    gameConfigRef.current = { durationSec, speed: config.speed, spawnMs: config.spawnMs }
     setGameStatus('playing')
     setZombies([])
     setLives(3)
-    setTimeLeft(GAME_DURATION_SEC)
+    setTimeLeft(durationSec)
     setAnswerInput('')
     setLaserFeedback(null)
     setPoopEmojis([])
+    setFleeingPigs([])
     nextIdRef.current = 1
-  }, [])
+  }, [difficulty, gameTimeMinutes])
 
   // Game timer
   useEffect(() => {
@@ -112,9 +135,10 @@ export default function ZombieGamePage() {
   // Spawn zombies
   useEffect(() => {
     if (gameStatus !== 'playing') return
+    const { spawnMs } = gameConfigRef.current
     spawnTimerRef.current = setInterval(() => {
       setZombies((z) => [...z, spawnZombie(nextIdRef.current++)])
-    }, SPAWN_INTERVAL_MS)
+    }, spawnMs)
     return () => {
       if (spawnTimerRef.current) clearInterval(spawnTimerRef.current)
     }
@@ -128,9 +152,10 @@ export default function ZombieGamePage() {
       const dt = (now - lastTimeRef.current) / 1000
       lastTimeRef.current = now
 
+      const { speed } = gameConfigRef.current
       setZombies((prev) => {
         const updated = prev
-          .map((z) => ({ ...z, x: z.x - ZOMBIE_SPEED_PERCENT_PER_SEC * dt }))
+          .map((z) => ({ ...z, x: z.x - speed * dt }))
           .filter((z) => {
             if (z.x <= HERO_ZONE_PERCENT) {
               setLives((l) => {
@@ -183,6 +208,12 @@ export default function ZombieGamePage() {
     }
     const index = zombies.findIndex((z) => z.answer === num)
     if (index >= 0) {
+      const hitZombie = zombies[index]
+      const pigEntry = { id: hitZombie.id, x: hitZombie.x, y: hitZombie.y, createdAt: Date.now() }
+      setFleeingPigs((p) => [...p, pigEntry])
+      setTimeout(() => {
+        setFleeingPigs((p) => p.filter((pig) => pig.id !== hitZombie.id))
+      }, FLEE_DURATION_MS + 100)
       setZombies((z) => z.filter((_, i) => i !== index))
       setLaserFeedback('hit')
     } else {
@@ -205,9 +236,49 @@ export default function ZombieGamePage() {
           🧟 Zombie Maths Survival
         </h1>
         <p className="text-slate-300 text-lg mb-6 text-center max-w-md">
-          Zombies are coming! Type the right answer to blast them. Match <strong>any</strong> zombie’s
-          answer to hit. Don’t let them reach the hero — 3 minutes, 3 lives. Good luck!
+          Zombies are coming! The magician turns them into piggies when you get the maths right. Match{' '}
+          <strong>any</strong> zombie’s answer to hit. Don’t let them reach the magician — 3 lives. Good luck!
         </p>
+
+        <div className="w-full max-w-sm space-y-6 mb-8">
+          <fieldset className="rounded-xl bg-black/20 p-4 border border-slate-600/50">
+            <legend className="text-slate-300 font-semibold px-2">Difficulty</legend>
+            <div className="flex gap-4 mt-2">
+              {(['easy', 'medium', 'hard'] as const).map((d) => (
+                <label key={d} className="flex items-center gap-2 cursor-pointer text-slate-200">
+                  <input
+                    type="radio"
+                    name="difficulty"
+                    value={d}
+                    checked={difficulty === d}
+                    onChange={() => setDifficulty(d)}
+                    className="accent-green-500"
+                  />
+                  <span className="capitalize">{d}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset className="rounded-xl bg-black/20 p-4 border border-slate-600/50">
+            <legend className="text-slate-300 font-semibold px-2">Time</legend>
+            <div className="flex gap-4 mt-2">
+              {TIME_OPTIONS.map((opt) => (
+                <label key={opt.value} className="flex items-center gap-2 cursor-pointer text-slate-200">
+                  <input
+                    type="radio"
+                    name="time"
+                    value={opt.value}
+                    checked={gameTimeMinutes === opt.value}
+                    onChange={() => setGameTimeMinutes(opt.value)}
+                    className="accent-green-500"
+                  />
+                  <span>{opt.label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        </div>
+
         <button
           onClick={startGame}
           className="bg-green-600 hover:bg-green-500 text-white text-xl font-bold py-4 px-8 rounded-full shadow-lg transition"
@@ -226,7 +297,7 @@ export default function ZombieGamePage() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
         <div className="text-7xl mb-4">🎉</div>
         <h1 className="text-4xl font-bold text-yellow-400">You survived!</h1>
-        <p className="text-slate-300 mt-2">3 minutes of zombie maths — you’re a hero.</p>
+        <p className="text-slate-300 mt-2">The magician prevailed. So many piggies ran away!</p>
         <div className="flex gap-4 mt-8">
           <button
             onClick={startGame}
@@ -297,14 +368,31 @@ export default function ZombieGamePage() {
 
       {/* Game area */}
       <div className="flex-1 relative min-h-0" style={{ minHeight: '320px' }}>
-        {/* Hero (left) */}
+        {/* Magician (left) */}
         <div
           className="absolute left-0 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center"
           style={{ left: 24 }}
         >
-          <span className="text-6xl md:text-7xl" title="Hero">🦸</span>
-          <span className="text-xs text-slate-400 mt-1">Hero</span>
+          <span className="text-6xl md:text-7xl" title="Magician">🧙‍♂️</span>
+          <span className="text-xs text-slate-400 mt-1">Magician</span>
         </div>
+
+        {/* Fleeing piggies (hit zombies run away) */}
+        {fleeingPigs.map((pig) => (
+          <div
+            key={pig.id}
+            className="absolute z-20 flex flex-col items-center pointer-events-none animate-flee-right"
+            style={{
+              left: `${pig.x}%`,
+              top: `${pig.y}%`,
+              transform: 'translate(-50%, -50%)',
+              ['--flee-start' as string]: `${pig.x}%`,
+            }}
+          >
+            <span className="text-4xl md:text-5xl">🐷</span>
+            <span className="text-xs text-pink-300 font-bold">oink oink!</span>
+          </div>
+        ))}
 
         {/* Laser line (visual only when shooting) */}
         {laserFeedback && (
