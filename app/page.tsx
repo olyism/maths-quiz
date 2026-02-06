@@ -292,7 +292,7 @@ export default function Home() {
 
   if (quizComplete) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 via-purple-50 to-blue-100 p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 max-w-2xl w-full text-center">
           <div className="text-6xl mb-4">🎉</div>
           <h1 className="text-4xl md:text-5xl font-bold text-pink-600 mb-4">
@@ -330,7 +330,7 @@ export default function Home() {
 
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-100 via-purple-50 to-blue-100">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🌸</div>
           <p className="text-2xl text-gray-700">Loading...</p>
@@ -343,7 +343,7 @@ export default function Home() {
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-50 to-blue-100 p-4 relative overflow-hidden">
+    <div className="min-h-screen p-4 relative overflow-hidden">
       {/* Emoji container for wrong answers */}
       <div className="fixed inset-0 pointer-events-none z-50">
         {wrongEmojis.map((emojiData) => (
