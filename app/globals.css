@@ -3,13 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --background: #fff5f5;
+  --background: #e0e7ff; /* indigo-100 fallback for blue–purple theme */
   --foreground: #1a1a1a;
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background: linear-gradient(135deg, #dbeafe 0%, #e9d5ff 50%, #c7d2fe 100%);
+  min-height: 100vh;
   font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
 }
 
