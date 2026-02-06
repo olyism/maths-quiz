@@ -231,7 +231,7 @@ export default function ArithmeticPage() {
               {selectedJoke}
             </p>
           </div>
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-wrap gap-4 justify-center">
             <button
               onClick={generateQuestions}
               className="bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xl font-bold py-4 px-8 rounded-full hover:from-pink-600 hover:to-purple-600 transform hover:scale-105 transition-all shadow-lg"
@@ -240,6 +240,12 @@ export default function ArithmeticPage() {
             </button>
             <Link
               href="/"
+              className="bg-slate-200 text-slate-700 text-xl font-bold py-4 px-8 rounded-full hover:bg-slate-300 transform hover:scale-105 transition-all shadow-lg"
+            >
+              🏠 Home
+            </Link>
+            <Link
+              href="/story"
               className="bg-gray-200 text-gray-700 text-xl font-bold py-4 px-8 rounded-full hover:bg-gray-300 transform hover:scale-105 transition-all shadow-lg"
             >
               Story Mode 📖
@@ -364,7 +370,7 @@ export default function ArithmeticPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4 justify-center">
+        <div className="flex flex-wrap gap-4 justify-center">
           <button
             onClick={generateQuestions}
             className="bg-gray-200 text-gray-700 text-lg font-semibold py-3 px-6 rounded-full hover:bg-gray-300 transition-all"
@@ -373,6 +379,12 @@ export default function ArithmeticPage() {
           </button>
           <Link
             href="/"
+            className="bg-slate-200 text-slate-700 text-lg font-semibold py-3 px-6 rounded-full hover:bg-slate-300 transition-all"
+          >
+            🏠 Home
+          </Link>
+          <Link
+            href="/story"
             className="bg-blue-200 text-blue-700 text-lg font-semibold py-3 px-6 rounded-full hover:bg-blue-300 transition-all"
           >
             📖 Story Mode
