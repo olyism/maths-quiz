@@ -9,8 +9,18 @@
 
 body {
   color: var(--foreground);
-  background: var(--background);
   font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', cursive, sans-serif;
+  min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: url('/duck-wallpaper.png') repeat;
+  background-size: 100px 100px;
+  z-index: -1;
 }
 
 @keyframes emoji-burst {
