@@ -46,3 +46,19 @@ body {
 .animate-flee-right {
   animation: flee-right 1.2s ease-out forwards;
 }
+
+@keyframes piggy-rain {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0.8;
+  }
+}
+
+.animate-piggy-rain {
+  animation: piggy-rain linear forwards;
+  pointer-events: none;
+}

@@ -36,6 +36,17 @@ const TILES = [
     bg: 'bg-gradient-to-br from-amber-400 via-orange-400 to-lime-500',
     border: 'border-amber-400/40',
   },
+  {
+    href: '/chinese',
+    emoji: '🐷',
+    title: 'Piggy Chinese',
+    description: 'Match Chinese characters to meanings. Earn piggy points — 1 min, 10s per question.',
+    gradient: 'from-rose-400 via-amber-500 to-orange-500',
+    shadow: 'shadow-amber-300/50',
+    hoverShadow: 'hover:shadow-amber-400/60',
+    bg: 'bg-gradient-to-br from-rose-400 via-amber-400 to-orange-500',
+    border: 'border-amber-400/40',
+  },
 ]
 
 export default function Home() {
@@ -50,7 +61,7 @@ export default function Home() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 w-full max-w-5xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 w-full max-w-5xl">
         {TILES.map((tile) => (
           <Link
             key={tile.href}

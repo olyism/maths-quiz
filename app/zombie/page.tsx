@@ -21,16 +21,39 @@ const DIFFICULTY_CONFIG = {
 } as const
 
 type Difficulty = keyof typeof DIFFICULTY_CONFIG
+type GameMode = 'maths' | 'touchtype'
 
 type FleeingPig = { id: number; x: number; y: number; createdAt: number }
 
 type Zombie = {
   id: number
   question: string
-  answer: number
+  matchValue: number | string
   x: number
   y: number
 }
+
+// Touch-type vocabulary by level (Year 7, Year 9, Year 12)
+const VOCAB_YEAR_7 = [
+  'because', 'before', 'always', 'around', 'again', 'after', 'about', 'could', 'would', 'should',
+  'their', 'there', 'which', 'while', 'where', 'other', 'often', 'every', 'first', 'right',
+  'think', 'thing', 'three', 'through', 'something', 'different', 'important', 'another', 'people', 'little',
+  'might', 'night', 'light', 'right', 'write', 'great', 'break', 'bread', 'heard', 'early',
+]
+
+const VOCAB_YEAR_9 = [
+  'although', 'however', 'therefore', 'otherwise', 'nevertheless', 'meanwhile', 'furthermore', 'consequently',
+  'environment', 'government', 'parliament', 'significant', 'experience', 'experiment', 'temperature', 'opportunity',
+  'recommend', 'recognise', 'appreciate', 'communicate', 'concentrate', 'demonstrate', 'immediately', 'particularly',
+  'responsibility', 'possibility', 'probability', 'availability', 'approximately', 'automatically',
+]
+
+const VOCAB_YEAR_12 = [
+  'notwithstanding', 'nevertheless', 'conversely', 'consequently', 'predominantly', 'contemporaneous',
+  'phenomenon', 'hypothesis', 'paradigm', 'rhetoric', 'synthesis', 'analysis', 'methodology', 'philosophical',
+  'entrepreneurship', 'infrastructure', 'sustainability', 'bureaucracy', 'democracy', 'constitutional',
+  'multidisciplinary', 'interdisciplinary', 'unprecedented', 'controversial', 'authoritarian', 'revolutionary',
+]
 
 function randomInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min
@@ -61,16 +84,19 @@ function generateZombieQuestion(): { question: string; answer: number } {
   return { question: `${result} ÷ ${divisor} = ?`, answer: quotient }
 }
 
-function spawnZombie(id: number): Zombie {
-  const { question, answer } = generateZombieQuestion()
-  const y = 20 + Math.random() * 60 // % from top
-  return {
-    id,
-    question,
-    answer,
-    x: ZOMBIE_START_X,
-    y,
+function getTouchTypeWord(difficulty: Difficulty): string {
+  const list = difficulty === 'easy' ? VOCAB_YEAR_7 : difficulty === 'medium' ? VOCAB_YEAR_9 : VOCAB_YEAR_12
+  return list[Math.floor(Math.random() * list.length)]
+}
+
+function spawnZombie(id: number, mode: GameMode, difficulty: Difficulty): Zombie {
+  const y = 20 + Math.random() * 60
+  if (mode === 'touchtype') {
+    const word = getTouchTypeWord(difficulty)
+    return { id, question: word, matchValue: word, x: ZOMBIE_START_X, y }
   }
+  const { question, answer } = generateZombieQuestion()
+  return { id, question, matchValue: answer, x: ZOMBIE_START_X, y }
 }
 
 const FLEE_DURATION_MS = 1200
@@ -86,16 +112,17 @@ export default function ZombieGamePage() {
   const [fleeingPigs, setFleeingPigs] = useState<FleeingPig[]>([])
   const [difficulty, setDifficulty] = useState<Difficulty>('easy')
   const [gameTimeMinutes, setGameTimeMinutes] = useState(1)
+  const [gameMode, setGameMode] = useState<GameMode>('maths')
   const nextIdRef = useRef(1)
   const lastTimeRef = useRef<number>(0)
   const spawnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const rafRef = useRef<number>(0)
-  const gameConfigRef = useRef({ durationSec: 60, speed: 4, spawnMs: 5500 })
+  const gameConfigRef = useRef({ durationSec: 60, speed: 4, spawnMs: 5500, mode: 'maths' as GameMode, difficulty: 'easy' as Difficulty })
 
   const startGame = useCallback(() => {
     const durationSec = gameTimeMinutes * 60
     const config = DIFFICULTY_CONFIG[difficulty]
-    gameConfigRef.current = { durationSec, speed: config.speed, spawnMs: config.spawnMs }
+    gameConfigRef.current = { durationSec, speed: config.speed, spawnMs: config.spawnMs, mode: gameMode, difficulty }
     setGameStatus('playing')
     setZombies([])
     setLives(3)
@@ -105,7 +132,7 @@ export default function ZombieGamePage() {
     setPoopEmojis([])
     setFleeingPigs([])
     nextIdRef.current = 1
-  }, [difficulty, gameTimeMinutes])
+  }, [difficulty, gameTimeMinutes, gameMode])
 
   // Game timer
   useEffect(() => {
@@ -136,8 +163,9 @@ export default function ZombieGamePage() {
   useEffect(() => {
     if (gameStatus !== 'playing') return
     const { spawnMs } = gameConfigRef.current
+    const { mode, difficulty: diff } = gameConfigRef.current
     spawnTimerRef.current = setInterval(() => {
-      setZombies((z) => [...z, spawnZombie(nextIdRef.current++)])
+      setZombies((z) => [...z, spawnZombie(nextIdRef.current++, mode, diff)])
     }, spawnMs)
     return () => {
       if (spawnTimerRef.current) clearInterval(spawnTimerRef.current)
@@ -199,14 +227,21 @@ export default function ZombieGamePage() {
   const handleShoot = (e: React.FormEvent) => {
     e.preventDefault()
     if (gameStatus !== 'playing' || !answerInput.trim()) return
-    const num = parseInt(answerInput.trim(), 10)
-    if (Number.isNaN(num)) {
-      setLaserFeedback('miss')
-      setTimeout(() => setLaserFeedback(null), 600)
-      setAnswerInput('')
-      return
+    const { mode } = gameConfigRef.current
+    let index: number
+    if (mode === 'maths') {
+      const num = parseInt(answerInput.trim(), 10)
+      if (Number.isNaN(num)) {
+        setLaserFeedback('miss')
+        setTimeout(() => setLaserFeedback(null), 600)
+        setAnswerInput('')
+        return
+      }
+      index = zombies.findIndex((z) => z.matchValue === num)
+    } else {
+      const typed = answerInput.trim().toLowerCase()
+      index = zombies.findIndex((z) => typeof z.matchValue === 'string' && z.matchValue.toLowerCase() === typed)
     }
-    const index = zombies.findIndex((z) => z.answer === num)
     if (index >= 0) {
       const hitZombie = zombies[index]
       const pigEntry = { id: hitZombie.id, x: hitZombie.x, y: hitZombie.y, createdAt: Date.now() }
@@ -229,18 +264,49 @@ export default function ZombieGamePage() {
     return `${m}:${s.toString().padStart(2, '0')}`
   }
 
+  const difficultyLabel = (d: Difficulty) =>
+    gameMode === 'touchtype' ? `${d} (${d === 'easy' ? 'Year 7' : d === 'medium' ? 'Year 9' : 'Year 12'})` : d
+
   if (gameStatus === 'idle') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
         <h1 className="text-4xl md:text-5xl font-bold text-yellow-400 mb-2 drop-shadow-lg">
-          🧟 Zombie Maths Survival
+          🧟 Zombie Survival
         </h1>
         <p className="text-slate-300 text-lg mb-6 text-center max-w-md">
-          Zombies are coming! The magician turns them into piggies when you get the maths right. Match{' '}
-          <strong>any</strong> zombie’s answer to hit. Don’t let them reach the magician — 3 lives. Good luck!
+          {gameMode === 'maths'
+            ? "Zombies are coming! The magician turns them into piggies when you get the maths right. Match any zombie's answer to hit. Don't let them reach the magician — 3 lives."
+            : "Zombies carry words. Type the word to zap them into piggies! Match any zombie's word to hit. Train your touch typing — 3 lives."}
         </p>
 
         <div className="w-full max-w-sm space-y-6 mb-8">
+          <fieldset className="rounded-xl bg-black/20 p-4 border border-slate-600/50">
+            <legend className="text-slate-300 font-semibold px-2">Mode</legend>
+            <div className="flex gap-4 mt-2">
+              <label className="flex items-center gap-2 cursor-pointer text-slate-200">
+                <input
+                  type="radio"
+                  name="mode"
+                  value="maths"
+                  checked={gameMode === 'maths'}
+                  onChange={() => setGameMode('maths')}
+                  className="accent-green-500"
+                />
+                <span>Maths</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-slate-200">
+                <input
+                  type="radio"
+                  name="mode"
+                  value="touchtype"
+                  checked={gameMode === 'touchtype'}
+                  onChange={() => setGameMode('touchtype')}
+                  className="accent-green-500"
+                />
+                <span>Touch type</span>
+              </label>
+            </div>
+          </fieldset>
           <fieldset className="rounded-xl bg-black/20 p-4 border border-slate-600/50">
             <legend className="text-slate-300 font-semibold px-2">Difficulty</legend>
             <div className="flex gap-4 mt-2">
@@ -254,7 +320,7 @@ export default function ZombieGamePage() {
                     onChange={() => setDifficulty(d)}
                     className="accent-green-500"
                   />
-                  <span className="capitalize">{d}</span>
+                  <span className="capitalize">{difficultyLabel(d)}</span>
                 </label>
               ))}
             </div>
@@ -354,16 +420,18 @@ export default function ZombieGamePage() {
       {/* HUD */}
       <div className="flex justify-between items-center px-4 py-2 bg-black/30 text-white shrink-0">
         <div className="flex items-center gap-4">
-          <span className="text-lg font-bold text-yellow-400">⏱ {formatTime(timeLeft)}</span>
+          <span className="text-2xl font-bold text-yellow-400">⏱ {formatTime(timeLeft)}</span>
           <span className="flex gap-1">
             {[1, 2, 3].map((i) => (
-              <span key={i} className={i <= lives ? 'opacity-100' : 'opacity-30'}>
+              <span key={i} className={`text-2xl ${i <= lives ? 'opacity-100' : 'opacity-30'}`}>
                 ❤️
               </span>
             ))}
           </span>
         </div>
-        <span className="text-slate-400">Type an answer &amp; shoot</span>
+        <span className="text-slate-400 text-lg">
+          {gameConfigRef.current.mode === 'touchtype' ? 'Type the word & shoot' : 'Type an answer & shoot'}
+        </span>
       </div>
 
       {/* Game area */}
@@ -373,8 +441,8 @@ export default function ZombieGamePage() {
           className="absolute left-0 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center"
           style={{ left: 24 }}
         >
-          <span className="text-6xl md:text-7xl" title="Magician">🧙‍♂️</span>
-          <span className="text-xs text-slate-400 mt-1">Magician</span>
+          <span className="text-7xl md:text-8xl" title="Magician">🧙‍♂️</span>
+          <span className="text-sm text-slate-400 mt-1">Magician</span>
         </div>
 
         {/* Fleeing piggies (hit zombies run away) */}
@@ -389,8 +457,8 @@ export default function ZombieGamePage() {
               ['--flee-start' as string]: `${pig.x}%`,
             }}
           >
-            <span className="text-4xl md:text-5xl">🐷</span>
-            <span className="text-xs text-pink-300 font-bold">oink oink!</span>
+            <span className="text-5xl md:text-6xl">🐷</span>
+            <span className="text-sm text-pink-300 font-bold">oink oink!</span>
           </div>
         ))}
 
@@ -419,8 +487,8 @@ export default function ZombieGamePage() {
               transform: 'translate(-50%, -50%)',
             }}
           >
-            <span className="text-4xl md:text-5xl" title="Zombie">🧟</span>
-            <span className="text-xs md:text-sm font-mono font-bold text-white bg-black/60 px-2 py-0.5 rounded mt-1 whitespace-nowrap">
+            <span className="text-5xl md:text-6xl" title="Zombie">🧟</span>
+            <span className="text-lg md:text-xl font-mono font-bold text-white bg-black/60 px-3 py-1 rounded mt-1 whitespace-nowrap">
               {z.question}
             </span>
           </div>
@@ -430,13 +498,15 @@ export default function ZombieGamePage() {
       {/* Answer input (bottom) */}
       <div className="p-4 bg-black/30 shrink-0">
         <form onSubmit={handleShoot} className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto items-center">
-          <label className="text-slate-300 text-sm sm:text-base">Answer:</label>
+          <label className="text-slate-300 text-base sm:text-lg">
+            {gameConfigRef.current.mode === 'touchtype' ? 'Word:' : 'Answer:'}
+          </label>
           <input
-            type="number"
+            type={gameConfigRef.current.mode === 'touchtype' ? 'text' : 'number'}
             value={answerInput}
             onChange={(e) => setAnswerInput(e.target.value)}
-            className="flex-1 w-full sm:max-w-[140px] px-4 py-3 rounded-lg bg-slate-800 border border-slate-600 text-white text-xl font-mono focus:border-green-500 focus:outline-none"
-            placeholder="?"
+            className="flex-1 w-full sm:max-w-[220px] px-4 py-4 rounded-lg bg-slate-800 border border-slate-600 text-white text-2xl font-mono focus:border-green-500 focus:outline-none"
+            placeholder={gameConfigRef.current.mode === 'touchtype' ? 'type the word...' : '?'}
             autoFocus
             autoComplete="off"
           />
@@ -447,12 +517,14 @@ export default function ZombieGamePage() {
             🔫 Shoot
           </button>
         </form>
-        <p className="text-slate-500 text-center text-sm mt-2">
-          Hit any zombie whose question has that answer
+        <p className="text-slate-500 text-center text-base mt-2">
+          {gameConfigRef.current.mode === 'touchtype'
+            ? 'Type the word that matches any zombie to hit them'
+            : 'Hit any zombie whose question has that answer'}
         </p>
       </div>
 
-      <Link href="/" className="absolute top-2 right-2 text-slate-500 hover:text-white text-sm">
+      <Link href="/" className="absolute top-2 right-2 text-slate-500 hover:text-white text-base">
         Exit
       </Link>
     </div>
