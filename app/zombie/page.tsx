@@ -113,6 +113,12 @@ export default function ZombieGamePage() {
   const [difficulty, setDifficulty] = useState<Difficulty>('easy')
   const [gameTimeMinutes, setGameTimeMinutes] = useState(1)
   const [gameMode, setGameMode] = useState<GameMode>('maths')
+  const [magicalGirlImgError, setMagicalGirlImgError] = useState(false)
+  const [spriteImgError, setSpriteImgError] = useState(false)
+  const [spriteZapsImgError, setSpriteZapsImgError] = useState(false)
+  const [spriteDamageImgError, setSpriteDamageImgError] = useState(false)
+  const [showDamageSprite, setShowDamageSprite] = useState(false)
+  const damageTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const nextIdRef = useRef(1)
   const lastTimeRef = useRef<number>(0)
   const spawnTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -131,6 +137,8 @@ export default function ZombieGamePage() {
     setLaserFeedback(null)
     setPoopEmojis([])
     setFleeingPigs([])
+    setShowDamageSprite(false)
+    if (damageTimeoutRef.current) clearTimeout(damageTimeoutRef.current)
     nextIdRef.current = 1
   }, [difficulty, gameTimeMinutes, gameMode])
 
@@ -186,6 +194,9 @@ export default function ZombieGamePage() {
           .map((z) => ({ ...z, x: z.x - speed * dt }))
           .filter((z) => {
             if (z.x <= HERO_ZONE_PERCENT) {
+              setShowDamageSprite(true)
+              if (damageTimeoutRef.current) clearTimeout(damageTimeoutRef.current)
+              damageTimeoutRef.current = setTimeout(() => setShowDamageSprite(false), 1200)
               setLives((l) => {
                 if (l <= 1) {
                   setGameStatus('lost')
@@ -269,91 +280,111 @@ export default function ZombieGamePage() {
 
   if (gameStatus === 'idle') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-        <h1 className="text-4xl md:text-5xl font-bold text-yellow-400 mb-2 drop-shadow-lg">
-          🧟 Zombie Survival
-        </h1>
-        <p className="text-slate-300 text-lg mb-6 text-center max-w-md">
-          {gameMode === 'maths'
-            ? "Zombies are coming! The magician turns them into piggies when you get the maths right. Match any zombie's answer to hit. Don't let them reach the magician — 3 lives."
-            : "Zombies carry words. Type the word to zap them into piggies! Match any zombie's word to hit. Train your touch typing — 3 lives."}
-        </p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 flex flex-col md:flex-row md:items-center md:justify-center md:gap-12">
+        {/* Content: stacked first on mobile, left on desktop */}
+        <div className="flex flex-col items-center md:items-start w-full max-w-sm md:max-w-md order-2 md:order-1">
+          <h1 className="text-4xl md:text-5xl font-bold text-yellow-400 mb-2 drop-shadow-lg text-center md:text-left">
+            🧟 Zombie Survival
+          </h1>
+          <p className="text-slate-300 text-lg mb-6 text-center md:text-left max-w-md">
+            {gameMode === 'maths'
+              ? "Zombies are coming! The Magical Girl turns them into piggies when you get the maths right. Match any zombie's answer to hit. Don't let them reach the Magical Girl — 3 lives."
+              : "Zombies carry words. Type the word to zap them into piggies! Match any zombie's word to hit. Train your touch typing — 3 lives."}
+          </p>
 
-        <div className="w-full max-w-sm space-y-6 mb-8">
-          <fieldset className="rounded-xl bg-black/20 p-4 border border-slate-600/50">
-            <legend className="text-slate-300 font-semibold px-2">Mode</legend>
-            <div className="flex gap-4 mt-2">
-              <label className="flex items-center gap-2 cursor-pointer text-slate-200">
-                <input
-                  type="radio"
-                  name="mode"
-                  value="maths"
-                  checked={gameMode === 'maths'}
-                  onChange={() => setGameMode('maths')}
-                  className="accent-green-500"
-                />
-                <span>Maths</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer text-slate-200">
-                <input
-                  type="radio"
-                  name="mode"
-                  value="touchtype"
-                  checked={gameMode === 'touchtype'}
-                  onChange={() => setGameMode('touchtype')}
-                  className="accent-green-500"
-                />
-                <span>Touch type</span>
-              </label>
-            </div>
-          </fieldset>
-          <fieldset className="rounded-xl bg-black/20 p-4 border border-slate-600/50">
-            <legend className="text-slate-300 font-semibold px-2">Difficulty</legend>
-            <div className="flex gap-4 mt-2">
-              {(['easy', 'medium', 'hard'] as const).map((d) => (
-                <label key={d} className="flex items-center gap-2 cursor-pointer text-slate-200">
+          <div className="w-full space-y-6 mb-8">
+            <fieldset className="rounded-xl bg-black/20 p-4 border border-slate-600/50">
+              <legend className="text-slate-300 font-semibold px-2">Mode</legend>
+              <div className="flex gap-4 mt-2">
+                <label className="flex items-center gap-2 cursor-pointer text-slate-200">
                   <input
                     type="radio"
-                    name="difficulty"
-                    value={d}
-                    checked={difficulty === d}
-                    onChange={() => setDifficulty(d)}
+                    name="mode"
+                    value="maths"
+                    checked={gameMode === 'maths'}
+                    onChange={() => setGameMode('maths')}
                     className="accent-green-500"
                   />
-                  <span className="capitalize">{difficultyLabel(d)}</span>
+                  <span>Maths</span>
                 </label>
-              ))}
-            </div>
-          </fieldset>
-          <fieldset className="rounded-xl bg-black/20 p-4 border border-slate-600/50">
-            <legend className="text-slate-300 font-semibold px-2">Time</legend>
-            <div className="flex gap-4 mt-2">
-              {TIME_OPTIONS.map((opt) => (
-                <label key={opt.value} className="flex items-center gap-2 cursor-pointer text-slate-200">
+                <label className="flex items-center gap-2 cursor-pointer text-slate-200">
                   <input
                     type="radio"
-                    name="time"
-                    value={opt.value}
-                    checked={gameTimeMinutes === opt.value}
-                    onChange={() => setGameTimeMinutes(opt.value)}
+                    name="mode"
+                    value="touchtype"
+                    checked={gameMode === 'touchtype'}
+                    onChange={() => setGameMode('touchtype')}
                     className="accent-green-500"
                   />
-                  <span>{opt.label}</span>
+                  <span>Touch type</span>
                 </label>
-              ))}
-            </div>
-          </fieldset>
+              </div>
+            </fieldset>
+            <fieldset className="rounded-xl bg-black/20 p-4 border border-slate-600/50">
+              <legend className="text-slate-300 font-semibold px-2">Difficulty</legend>
+              <div className="flex gap-4 mt-2">
+                {(['easy', 'medium', 'hard'] as const).map((d) => (
+                  <label key={d} className="flex items-center gap-2 cursor-pointer text-slate-200">
+                    <input
+                      type="radio"
+                      name="difficulty"
+                      value={d}
+                      checked={difficulty === d}
+                      onChange={() => setDifficulty(d)}
+                      className="accent-green-500"
+                    />
+                    <span className="capitalize">{difficultyLabel(d)}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <fieldset className="rounded-xl bg-black/20 p-4 border border-slate-600/50">
+              <legend className="text-slate-300 font-semibold px-2">Time</legend>
+              <div className="flex gap-4 mt-2">
+                {TIME_OPTIONS.map((opt) => (
+                  <label key={opt.value} className="flex items-center gap-2 cursor-pointer text-slate-200">
+                    <input
+                      type="radio"
+                      name="time"
+                      value={opt.value}
+                      checked={gameTimeMinutes === opt.value}
+                      onChange={() => setGameTimeMinutes(opt.value)}
+                      className="accent-green-500"
+                    />
+                    <span>{opt.label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          </div>
+
+          <button
+            onClick={startGame}
+            className="bg-green-600 hover:bg-green-500 text-white text-xl font-bold py-4 px-8 rounded-full shadow-lg transition"
+          >
+            Start game
+          </button>
+          <Link href="/" className="mt-6 text-slate-400 hover:text-white">
+            ← Back home
+          </Link>
         </div>
 
-        <button
-          onClick={startGame}
-          className="bg-green-600 hover:bg-green-500 text-white text-xl font-bold py-4 px-8 rounded-full shadow-lg transition"
-        >
-          Start game
-        </button>
-        <Link href="/" className="mt-6 text-slate-400 hover:text-white">
-          ← Back home
-        </Link>
+        {/* Magical Girl character: stacked on top on mobile, right on desktop */}
+        <div className="flex justify-center md:justify-end w-full md:w-auto order-1 md:order-2 md:max-w-md lg:max-w-lg xl:max-w-xl md:flex-shrink-0">
+          <div className="relative w-64 h-80 md:w-80 md:h-[28rem] lg:w-96 lg:h-[32rem] xl:w-[28rem] xl:h-[36rem] flex items-end justify-center">
+            {magicalGirlImgError ? (
+              <span className="text-8xl md:text-9xl lg:text-[10rem] xl:text-[12rem] select-none" aria-hidden>🧙‍♀️</span>
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src="/magical-girl.png"
+                alt="Magical Girl"
+                className="max-w-full max-h-full w-auto h-auto object-contain object-bottom"
+                onError={() => setMagicalGirlImgError(true)}
+              />
+            )}
+          </div>
+        </div>
       </div>
     )
   }
@@ -363,7 +394,7 @@ export default function ZombieGamePage() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
         <div className="text-7xl mb-4">🎉</div>
         <h1 className="text-4xl font-bold text-yellow-400">You survived!</h1>
-        <p className="text-slate-300 mt-2">The magician prevailed. So many piggies ran away!</p>
+        <p className="text-slate-300 mt-2">The Magical Girl prevailed. So many piggies ran away!</p>
         <div className="flex gap-4 mt-8">
           <button
             onClick={startGame}
@@ -436,13 +467,39 @@ export default function ZombieGamePage() {
 
       {/* Game area */}
       <div className="flex-1 relative min-h-0" style={{ minHeight: '320px' }}>
-        {/* Magician (left) */}
+        {/* Magical Girl (left) - game sprite; damage when hit, zaps when shooting */}
         <div
           className="absolute left-0 top-1/2 -translate-y-1/2 z-10 flex flex-col items-center"
           style={{ left: 24 }}
         >
-          <span className="text-7xl md:text-8xl" title="Magician">🧙‍♂️</span>
-          <span className="text-sm text-slate-400 mt-1">Magician</span>
+          {showDamageSprite && !spriteDamageImgError ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src="/magical-girl-sprite-damage.png"
+              alt="Magical Girl taking damage"
+              className="w-36 h-44 md:w-48 md:h-56 lg:w-56 lg:h-72 object-contain object-bottom"
+              onError={() => setSpriteDamageImgError(true)}
+            />
+          ) : laserFeedback && !spriteZapsImgError ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src="/magical-girl-sprite-zaps.png"
+              alt="Magical Girl zapping"
+              className="w-36 h-44 md:w-48 md:h-56 lg:w-56 lg:h-72 object-contain object-bottom"
+              onError={() => setSpriteZapsImgError(true)}
+            />
+          ) : spriteImgError ? (
+            <span className="text-8xl md:text-9xl lg:text-[10rem]" title="Magical Girl">🧙‍♀️</span>
+          ) : (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src="/magical-girl-sprite.png"
+              alt="Magical Girl"
+              className="w-36 h-44 md:w-48 md:h-56 lg:w-56 lg:h-72 object-contain object-bottom"
+              onError={() => setSpriteImgError(true)}
+            />
+          )}
+          <span className="text-sm text-slate-400 mt-1">Magical Girl</span>
         </div>
 
         {/* Fleeing piggies (hit zombies run away) */}
